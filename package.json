@@ -1,0 +1,30 @@
+{
+  "name": "zxtracker2wav",
+  "version": "1.0.0",
+  "description": "Command-line tool for converting ZX Spectrum tracker files to .wav",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "zxtracker2wav": "./cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/reverietracker/zxtracker2wav.git"
+  },
+  "author": "Matt Westcott",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/reverietracker/zxtracker2wav/issues"
+  },
+  "homepage": "https://github.com/reverietracker/zxtracker2wav#readme",
+  "dependencies": {
+    "aychip": "^1.0.0",
+    "psgformat": "^1.0.0",
+    "stcengine": "^1.0.1",
+    "stcformat": "^1.0.0",
+    "wavefile": "^11.0.0",
+    "yargs": "^17.7.2"
+  }
+}
