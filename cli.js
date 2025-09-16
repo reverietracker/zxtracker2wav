@@ -20,17 +20,40 @@ const argv = yargs(hideBin(process.argv))
 
 const [inputFile, outputFile] = argv._;
 
-const chip = new AYChip({
-    frequency: 1773400,
-    sampleRate: SAMPLE_RATE,
-    stereoMode: 'acb',
-});
+class WAVWriter {
+    constructor(filename) {
+        this.filename = filename;
 
-const leftBuffer = new Float32Array(SAMPLES_PER_FRAME);
-const rightBuffer = new Float32Array(SAMPLES_PER_FRAME);
-const buffers = [leftBuffer, rightBuffer];
-const waveLeftBuffer = [];
-const waveRightBuffer = [];
+        this.chip = new AYChip({
+            frequency: 1773400,
+            sampleRate: SAMPLE_RATE,
+            stereoMode: 'acb',
+        });
+
+        this.leftBuffer = new Float32Array(SAMPLES_PER_FRAME);
+        this.rightBuffer = new Float32Array(SAMPLES_PER_FRAME);
+        this.buffers = [this.leftBuffer, this.rightBuffer];
+        this.waveLeftBuffer = [];
+        this.waveRightBuffer = [];
+    }
+    writeFrame(frame) {
+        for (const [reg, val] of frame) {
+            this.chip.setRegister(reg, val);
+        }
+        this.chip.generate(this.buffers, 0, SAMPLES_PER_FRAME);
+        for (let i = 0; i < SAMPLES_PER_FRAME; i++) {
+            this.waveLeftBuffer.push(this.leftBuffer[i]*32767);
+            this.waveRightBuffer.push(this.rightBuffer[i]*32767);
+        }
+    }
+    close() {
+        const wav = new WaveFile();
+        wav.fromScratch(2, SAMPLE_RATE, '16', [this.waveLeftBuffer, this.waveRightBuffer]);
+        fs.writeFileSync(this.filename, wav.toBuffer());
+    }
+}
+
+writer = new WAVWriter(outputFile);
 
 if (path.extname(inputFile) == '.stc') {
     const inputBuffer = fs.readFileSync(inputFile);
@@ -39,32 +62,16 @@ if (path.extname(inputFile) == '.stc') {
 
     while (!engine.looped) {
         const frame = engine.getAudioFrame();
-        for ([reg, val] of frame) {
-            chip.setRegister(reg, val);
-        }
-        chip.generate(buffers, 0, SAMPLES_PER_FRAME);
-        for (let i = 0; i < SAMPLES_PER_FRAME; i++) {
-            waveLeftBuffer.push(leftBuffer[i]*32767);
-            waveRightBuffer.push(rightBuffer[i]*32767);
-        }
+        writer.writeFrame(frame);
     }
 } else if (path.extname(inputFile) == '.psg') {
     const inputBuffer = fs.readFileSync(inputFile);
     const frames = readPSG(inputBuffer);
     for (const frame of frames) {
-        for ([reg, val] of frame) {
-            chip.setRegister(reg, val);
-        }
-        chip.generate(buffers, 0, SAMPLES_PER_FRAME);
-        for (let i = 0; i < SAMPLES_PER_FRAME; i++) {
-            waveLeftBuffer.push(leftBuffer[i]*32767);
-            waveRightBuffer.push(rightBuffer[i]*32767);
-        }
+        writer.writeFrame(frame);
     }
 } else {
     throw new Error("Unknown input file type");
 }
 
-const wav = new WaveFile();
-wav.fromScratch(2, SAMPLE_RATE, '16', [waveLeftBuffer, waveRightBuffer]);
-fs.writeFileSync(outputFile, wav.toBuffer());
+writer.close();
