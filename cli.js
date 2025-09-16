@@ -8,7 +8,7 @@ const { readSTC } = require("stcformat");
 const { STCEngine } = require("stcengine");
 const { AYChip } = require("aychip");
 const { WaveFile } = require('wavefile');
-const { readPSG } = require('psgformat');
+const { readPSG, writePSG } = require('psgformat');
 
 const SAMPLE_RATE = 44100;
 const SAMPLES_PER_FRAME = SAMPLE_RATE / 50;
@@ -53,7 +53,27 @@ class WAVWriter {
     }
 }
 
-writer = new WAVWriter(outputFile);
+class PSGWriter {
+    constructor(filename) {
+        this.filename = filename;
+        this.frames = [];
+    }
+    writeFrame(frame) {
+        this.frames.push(frame);
+    }
+    close() {
+        const file = fs.createWriteStream(this.filename);
+        writePSG(file, this.frames);
+        file.end();
+    }
+}
+
+let writer;
+if (path.extname(outputFile) == '.psg') {
+    writer = new PSGWriter(outputFile);
+} else {
+    writer = new WAVWriter(outputFile);
+}
 
 if (path.extname(inputFile) == '.stc') {
     const inputBuffer = fs.readFileSync(inputFile);
