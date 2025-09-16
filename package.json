@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
-    "zxtracker2wav": "./cli.js"
+    "zxtracker2wav": "cli.js"
   },
   "repository": {
     "type": "git",
