@@ -10,24 +10,48 @@ const { AYChip } = require("aychip");
 const { WaveFile } = require('wavefile');
 const { readPSG, writePSG } = require('psgformat');
 
-const SAMPLE_RATE = 44100;
-const SAMPLES_PER_FRAME = SAMPLE_RATE / 50;
-
 const argv = yargs(hideBin(process.argv))
     .usage('Usage: $0 <input file> <output file>')
     .demandCommand(2, 'You must provide input and output files')
-    .argv;
+    .option('samplerate', {
+        alias: 'r',
+        type: 'number',
+        description: 'Playback sample rate',
+        default: 44100,
+    })
+    .option('framerate', {
+        alias: 'f',
+        type: 'number',
+        description: 'Playback frame rate',
+        default: 50,
+    })
+    .option('clock', {
+        alias: 'c',
+        type: 'number',
+        description: 'AY chip clock speed',
+        default: 1773400,
+    })
+    .option('stereo', {
+        alias: 's',
+        type: 'string',
+        description: 'Stereo mode - "abc", "acb" (or any other ordering) or "mono"',
+        default: 'acb',
+    })
+    .parse();
 
 const [inputFile, outputFile] = argv._;
+
+const SAMPLE_RATE = argv.samplerate;
+const SAMPLES_PER_FRAME = SAMPLE_RATE / argv.framerate;
 
 class WAVWriter {
     constructor(filename) {
         this.filename = filename;
 
         this.chip = new AYChip({
-            frequency: 1773400,
+            frequency: argv.clock,
             sampleRate: SAMPLE_RATE,
-            stereoMode: 'acb',
+            stereoMode: argv.stereo,
         });
 
         this.leftBuffer = new Float32Array(SAMPLES_PER_FRAME);
