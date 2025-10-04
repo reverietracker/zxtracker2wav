@@ -22,8 +22,8 @@
   "dependencies": {
     "aychip": "^1.0.0",
     "psgformat": "^1.0.0",
-    "stcengine": "^1.0.1",
-    "stcformat": "^1.0.0",
+    "stcengine": "^1.0.2",
+    "stcformat": "^1.0.1",
     "wavefile": "^11.0.0",
     "yargs": "^17.7.2"
   }
